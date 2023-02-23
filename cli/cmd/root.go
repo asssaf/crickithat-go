@@ -12,12 +12,9 @@ type Command interface {
 	Name() string
 }
 
-var (
-	servoCmd = flag.NewFlagSet("servo", flag.ExitOnError)
-)
-
 func Execute() error {
 	commands := []Command{
+		NewResetCommand(),
 		NewServoCommand(),
 	}
 

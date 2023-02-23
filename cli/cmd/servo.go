@@ -3,7 +3,6 @@ package cmd
 import (
 	"flag"
 	"log"
-	"time"
 
 	"periph.io/x/conn/v3/i2c/i2creg"
 	"periph.io/x/host/v3"
@@ -71,24 +70,6 @@ func (c *ServoCommand) Execute() error {
 
 	if err := dev.Init(); err != nil {
 		log.Fatalf("device init: %w", err)
-	}
-
-	if err := dev.Reset(); err != nil {
-		log.Fatalf("device reset: %w", err)
-	}
-
-	time.Sleep(500 * time.Millisecond)
-
-	// getting 0xff on the first read, just ignore it
-	if _, err = dev.GetHardwareCode(); err != nil {
-		log.Fatalf("read hardware code: %w", err)
-	}
-
-	expectedHwCode := uint8(0x55)
-	if hwCode, err := dev.GetHardwareCode(); err != nil {
-		log.Fatalf("read hardware code: %w", err)
-	} else if hwCode != expectedHwCode {
-		log.Printf("unexpected hardware code: 0x%x, expected 0x%x", hwCode, expectedHwCode)
 	}
 
 	if err := dev.WriteServo(c.num-1, c.value); err != nil {
