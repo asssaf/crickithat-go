@@ -6,13 +6,10 @@ import (
 	"fmt"
 
 	"github.com/asssaf/crickithat-go/cli/cmd/servo"
+	"github.com/asssaf/crickithat-go/cli/util"
 )
 
-type Command interface {
-	Init([]string) error
-	Execute() error
-	Name() string
-}
+type Command = util.Command
 
 func Execute() error {
 	commands := []Command{

@@ -4,13 +4,11 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+
+	"github.com/asssaf/crickithat-go/cli/util"
 )
 
-type Command interface {
-	Init([]string) error
-	Execute() error
-	Name() string
-}
+type Command = util.Command
 
 type ServoCommand struct {
 	fs       *flag.FlagSet
