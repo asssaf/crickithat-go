@@ -14,7 +14,7 @@ import (
 type MoveCommand struct {
 	fs    *flag.FlagSet
 	num   int
-	value int
+	value float64
 }
 
 func NewMoveCommand() *MoveCommand {
@@ -23,7 +23,7 @@ func NewMoveCommand() *MoveCommand {
 	}
 
 	c.fs.IntVar(&c.num, "num", 0, "Servo number (1-4)")
-	c.fs.IntVar(&c.value, "value", -1, "Value to set (0-180)")
+	c.fs.Float64Var(&c.value, "value", -1, "Value to set (0.0-1.0)")
 
 	return c
 }
@@ -43,8 +43,8 @@ func (c *MoveCommand) Init(args []string) error {
 		return fmt.Errorf("servo num must be in the range 1-4: %d", c.num)
 	}
 
-	if c.value < 0 || c.num > 180 {
-		return fmt.Errorf("servo value must be in the range 0-180: %d", c.value)
+	if c.value < 0.0 || c.value > 1.0 {
+		return fmt.Errorf("servo value must be in the range 0.0-1.0: %f", c.value)
 	}
 
 	return nil

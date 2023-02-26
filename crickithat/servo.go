@@ -17,13 +17,13 @@ const (
 
 var servoPwms = []uint8{PWM_SERVO1, PWM_SERVO2, PWM_SERVO3, PWM_SERVO4}
 
-func (d *Dev) WriteServo(i int, value int) error {
+func (d *Dev) WriteServo(i int, value float64) error {
 	if i < 0 || i > 3 {
 		return fmt.Errorf("servo index should be in range 0-3: %d", i)
 	}
 
-	if value < 0 || value > 180 {
-		return fmt.Errorf("value should be in range 0-180: %d", value)
+	if value < 0.0 || value > 1.0 {
+		return fmt.Errorf("value should be in range 0.0-1.0: %d", value)
 	}
 
 	// set pwm frequency
@@ -31,7 +31,7 @@ func (d *Dev) WriteServo(i int, value int) error {
 		return err
 	}
 
-	scaledValue := uint16(scale(value, 0, 180, MIN_PULSE, MAX_PULSE))
+	scaledValue := uint16(scaleFloat64(value, 0.0, 1.0, MIN_PULSE, MAX_PULSE))
 
 	if err := d.SetWidth(i, scaledValue); err != nil {
 		return err
@@ -69,6 +69,10 @@ func (d *Dev) SetWidth(i int, value uint16) error {
 	err := d.writeRegister(SEESAW_TIMER_BASE, SEESAW_TIMER_PWM, data)
 	return err
 
+}
+
+func scaleFloat64(x, in_min, in_max, out_min, out_max float64) float64 {
+	return (x-in_min)*(out_max-out_min)/(in_max-in_min) + out_min
 }
 
 func scale(x, in_min, in_max, out_min, out_max int) int {
