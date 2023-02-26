@@ -22,7 +22,7 @@ type MoveCommand struct {
 	values         []float64
 }
 
-func NewMoveCommand() *MoveCommand {
+func NewMoveCommand(usagePrefix string) *MoveCommand {
 	c := &MoveCommand{
 		fs: flag.NewFlagSet("move", flag.ExitOnError),
 	}
@@ -33,7 +33,7 @@ func NewMoveCommand() *MoveCommand {
 	c.fs.IntVar(&c.delayMillis, "delay", 100, "Delay between positions, in milliseconds")
 
 	c.fs.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(), "Usage: crickithat servo %s <value> [<value> ... ]\n", c.fs.Name())
+		fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s %s <value> [<value> ... ]\n", usagePrefix, c.fs.Name())
 		fmt.Fprintf(flag.CommandLine.Output(), "Each <value> is in the range (0.0-1.0) as a factor of the pulse range.\n")
 		fmt.Fprintf(flag.CommandLine.Output(), "One or more <value>s can be provided and will be positioned in order.\n")
 		c.fs.PrintDefaults()

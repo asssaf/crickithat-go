@@ -2,6 +2,7 @@ package servo
 
 import (
 	"flag"
+	"fmt"
 
 	"github.com/asssaf/crickithat-go/cli/util"
 )
@@ -13,11 +14,12 @@ type ServoCommand struct {
 }
 
 func NewServoCommand(usagePrefix string) *ServoCommand {
+	fs := flag.NewFlagSet("servo", flag.ExitOnError)
 	c := &ServoCommand{
 		CompositeCommand: util.NewCompositeCommand(
-			flag.NewFlagSet("servo", flag.ExitOnError),
+			fs,
 			[]Command{
-				NewMoveCommand(),
+				NewMoveCommand(fmt.Sprintf("%s %s", usagePrefix, fs.Name())),
 				NewStopCommand(),
 			},
 			usagePrefix,

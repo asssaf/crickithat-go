@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	err := cmd.Execute()
+	err := Execute()
 	if err != nil {
 		fmt.Fprintln(flag.CommandLine.Output(), err.Error())
 		flag.Usage()
@@ -17,4 +17,15 @@ func main() {
 	}
 
 	os.Exit(0)
+}
+
+func Execute() error {
+	rootCommand := cmd.NewRootCommand("crickithat")
+	flag.Usage = rootCommand.FlagSet.Usage
+	flag.Parse()
+
+	if err := rootCommand.Init(flag.Args()); err != nil {
+		return err
+	}
+	return rootCommand.Execute()
 }
