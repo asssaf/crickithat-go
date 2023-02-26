@@ -1,7 +1,8 @@
-package cmd
+package servo
 
 import (
 	"flag"
+	"fmt"
 	"log"
 
 	"periph.io/x/conn/v3/i2c/i2creg"
@@ -10,15 +11,15 @@ import (
 	"github.com/asssaf/crickithat-go/crickithat"
 )
 
-type ServoCommand struct {
+type MoveCommand struct {
 	fs    *flag.FlagSet
 	num   int
 	value int
 }
 
-func NewServoCommand() *ServoCommand {
-	c := &ServoCommand{
-		fs: flag.NewFlagSet("servo", flag.ExitOnError),
+func NewMoveCommand() *MoveCommand {
+	c := &MoveCommand{
+		fs: flag.NewFlagSet("move", flag.ExitOnError),
 	}
 
 	c.fs.IntVar(&c.num, "num", 0, "Servo number (1-4)")
@@ -27,29 +28,29 @@ func NewServoCommand() *ServoCommand {
 	return c
 }
 
-func (c *ServoCommand) Name() string {
+func (c *MoveCommand) Name() string {
 	return c.fs.Name()
 }
 
-func (c *ServoCommand) Init(args []string) error {
+func (c *MoveCommand) Init(args []string) error {
 	if err := c.fs.Parse(args); err != nil {
 		return err
 	}
 
 	flag.Usage = c.fs.Usage
 
-	return nil
-}
-
-func (c *ServoCommand) Execute() error {
 	if c.num < 1 || c.num > 4 {
-		log.Fatalf("servo num must be in the range 1-4: %d", c.num)
+		return fmt.Errorf("servo num must be in the range 1-4: %d", c.num)
 	}
 
 	if c.value < 0 || c.num > 180 {
-		log.Fatalf("servo value must be in the range 0-180: %d", c.value)
+		return fmt.Errorf("servo value must be in the range 0-180: %d", c.value)
 	}
 
+	return nil
+}
+
+func (c *MoveCommand) Execute() error {
 	// Make sure periph is initialized.
 	if _, err := host.Init(); err != nil {
 		log.Fatalf("host init: %w", err)

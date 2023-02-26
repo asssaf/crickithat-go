@@ -4,6 +4,8 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+
+	"github.com/asssaf/crickithat-go/cli/cmd/servo"
 )
 
 type Command interface {
@@ -15,7 +17,7 @@ type Command interface {
 func Execute() error {
 	commands := []Command{
 		NewResetCommand(),
-		NewServoCommand(),
+		servo.NewServoCommand(),
 	}
 
 	flag.Usage = func() {
