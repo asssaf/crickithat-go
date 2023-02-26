@@ -14,7 +14,7 @@ type Command = util.Command
 func Execute() error {
 	commands := []Command{
 		NewResetCommand(),
-		servo.NewServoCommand(),
+		servo.NewServoCommand("crickithat"),
 	}
 
 	flag.Usage = func() {
