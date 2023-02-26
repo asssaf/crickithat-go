@@ -23,6 +23,7 @@ func NewServoCommand() *ServoCommand {
 		fs: flag.NewFlagSet("servo", flag.ExitOnError),
 		commands: []Command{
 			NewMoveCommand(),
+			NewStopCommand(),
 		},
 	}
 

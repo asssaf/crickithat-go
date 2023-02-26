@@ -40,6 +40,18 @@ func (d *Dev) WriteServo(i int, value int) error {
 	return nil
 }
 
+func (d *Dev) WriteServoStop(i int) error {
+	if i < 0 || i > 3 {
+		return fmt.Errorf("servo index should be in range 0-3: %d", i)
+	}
+
+	if err := d.SetWidth(i, 0); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (d *Dev) SetPwmFreq(i int, frequency uint16) error {
 	data := make([]byte, 3)
 	data[0] = servoPwms[i]
