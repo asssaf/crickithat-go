@@ -13,11 +13,13 @@ const (
 
 	MIN_PULSE = 3277
 	MAX_PULSE = 6554
+
+	FREQ_HZ = 50
 )
 
 var servoPwms = []uint8{PWM_SERVO1, PWM_SERVO2, PWM_SERVO3, PWM_SERVO4}
 
-func (d *Dev) WriteServo(i int, value float64) error {
+func (d *Dev) WriteServo(i int, value float64, minPulseMicros, maxPulseMicros int) error {
 	if i < 0 || i > 3 {
 		return fmt.Errorf("servo index should be in range 0-3: %d", i)
 	}
@@ -27,11 +29,25 @@ func (d *Dev) WriteServo(i int, value float64) error {
 	}
 
 	// set pwm frequency
-	if err := d.SetPwmFreq(i, 50); err != nil {
+	if err := d.SetPwmFreq(i, FREQ_HZ); err != nil {
 		return err
 	}
 
-	scaledValue := uint16(scaleFloat64(value, 0.0, 1.0, MIN_PULSE, MAX_PULSE))
+	minPulse := float64(minPulseMicros) * FREQ_HZ * 65535 / 1_000_000
+	if minPulse == 0 {
+		minPulse = MIN_PULSE
+	}
+
+	maxPulse := float64(maxPulseMicros) * FREQ_HZ * 65535 / 1_000_000
+	if maxPulse == 0 {
+		maxPulse = MAX_PULSE
+	}
+
+	if minPulseMicros >= maxPulseMicros {
+		return fmt.Errorf("the minimum pulse width must be less than the maximum pulse width")
+	}
+
+	scaledValue := uint16(scaleFloat64(value, 0.0, 1.0, minPulse, maxPulse))
 
 	if err := d.SetWidth(i, scaledValue); err != nil {
 		return err

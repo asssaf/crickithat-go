@@ -14,10 +14,12 @@ import (
 )
 
 type MoveCommand struct {
-	fs          *flag.FlagSet
-	num         int
-	delayMillis int
-	values      []float64
+	fs             *flag.FlagSet
+	num            int
+	delayMillis    int
+	minPulseMicros int
+	maxPulseMicros int
+	values         []float64
 }
 
 func NewMoveCommand() *MoveCommand {
@@ -26,7 +28,9 @@ func NewMoveCommand() *MoveCommand {
 	}
 
 	c.fs.IntVar(&c.num, "num", 0, "Servo number (1-4)")
-	c.fs.IntVar(&c.delayMillis, "delay", 100, "Delay between positions in milliseconds")
+	c.fs.IntVar(&c.minPulseMicros, "min-pulse", 1000, "Pulse duration for the minimum of the range, in microseconds (500-2500)")
+	c.fs.IntVar(&c.maxPulseMicros, "max-pulse", 2000, "Pulse duration for the maximum of the range, in microseconds (500-2500)")
+	c.fs.IntVar(&c.delayMillis, "delay", 100, "Delay between positions, in milliseconds")
 
 	c.fs.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage: crickithat servo %s <value> [<value> ... ]\n", c.fs.Name())
@@ -53,8 +57,16 @@ func (c *MoveCommand) Init(args []string) error {
 		return fmt.Errorf("servo num must be in the range 1-4: %d", c.num)
 	}
 
+	if c.minPulseMicros < 500 || c.minPulseMicros > 2500 {
+		return fmt.Errorf("minimum pulse must be in the range 500-2500: %d", c.minPulseMicros)
+	}
+
+	if c.maxPulseMicros < 500 || c.maxPulseMicros > 2500 {
+		return fmt.Errorf("maximum pulse must be in the range 500-2500: %d", c.maxPulseMicros)
+	}
+
 	if c.fs.NArg() == 0 {
-		return fmt.Errorf("Missing value")
+		return fmt.Errorf("Missing position value")
 	}
 
 	for _, arg := range c.fs.Args() {
@@ -92,7 +104,7 @@ func (c *MoveCommand) Execute() error {
 	}
 
 	for _, value := range c.values {
-		if err := dev.WriteServo(c.num-1, value); err != nil {
+		if err := dev.WriteServo(c.num-1, value, c.minPulseMicros, c.maxPulseMicros); err != nil {
 			log.Fatalf("write servo: %w", err)
 		}
 		time.Sleep(time.Duration(c.delayMillis) * time.Millisecond)
