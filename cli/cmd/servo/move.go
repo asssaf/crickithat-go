@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"strconv"
 
 	"periph.io/x/conn/v3/i2c/i2creg"
 	"periph.io/x/host/v3"
@@ -12,9 +13,9 @@ import (
 )
 
 type MoveCommand struct {
-	fs    *flag.FlagSet
-	num   int
-	value float64
+	fs     *flag.FlagSet
+	num    int
+	values []float64
 }
 
 func NewMoveCommand() *MoveCommand {
@@ -23,7 +24,13 @@ func NewMoveCommand() *MoveCommand {
 	}
 
 	c.fs.IntVar(&c.num, "num", 0, "Servo number (1-4)")
-	c.fs.Float64Var(&c.value, "value", -1, "Value to set (0.0-1.0)")
+
+	c.fs.Usage = func() {
+		fmt.Fprintf(flag.CommandLine.Output(), "Usage: crickithat servo %s <value> [<value> ... ]\n", c.fs.Name())
+		fmt.Fprintf(flag.CommandLine.Output(), "Each <value> is in the range (0.0-1.0) as a factor of the pulse range.\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "One or more <value>s can be provided and will be positioned in order.\n")
+		c.fs.PrintDefaults()
+	}
 
 	return c
 }
@@ -43,8 +50,16 @@ func (c *MoveCommand) Init(args []string) error {
 		return fmt.Errorf("servo num must be in the range 1-4: %d", c.num)
 	}
 
-	if c.value < 0.0 || c.value > 1.0 {
-		return fmt.Errorf("servo value must be in the range 0.0-1.0: %f", c.value)
+	if c.fs.NArg() == 0 {
+		return fmt.Errorf("Missing value")
+	}
+
+	for _, arg := range c.fs.Args() {
+		if value, err := strconv.ParseFloat(arg, 64); err != nil || value < 0.0 || value > 1.0 {
+			return fmt.Errorf("servo value must be in the range 0.0-1.0: %s", arg)
+		} else {
+			c.values = append(c.values, value)
+		}
 	}
 
 	return nil
@@ -73,8 +88,10 @@ func (c *MoveCommand) Execute() error {
 		log.Fatalf("device init: %w", err)
 	}
 
-	if err := dev.WriteServo(c.num-1, c.value); err != nil {
-		log.Fatalf("write servo: %w", err)
+	for _, value := range c.values {
+		if err := dev.WriteServo(c.num-1, value); err != nil {
+			log.Fatalf("write servo: %w", err)
+		}
 	}
 
 	return nil
