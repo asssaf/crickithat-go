@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"time"
 
 	"periph.io/x/conn/v3/i2c/i2creg"
 	"periph.io/x/host/v3"
@@ -13,9 +14,10 @@ import (
 )
 
 type MoveCommand struct {
-	fs     *flag.FlagSet
-	num    int
-	values []float64
+	fs          *flag.FlagSet
+	num         int
+	delayMillis int
+	values      []float64
 }
 
 func NewMoveCommand() *MoveCommand {
@@ -24,6 +26,7 @@ func NewMoveCommand() *MoveCommand {
 	}
 
 	c.fs.IntVar(&c.num, "num", 0, "Servo number (1-4)")
+	c.fs.IntVar(&c.delayMillis, "delay", 100, "Delay between positions in milliseconds")
 
 	c.fs.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage: crickithat servo %s <value> [<value> ... ]\n", c.fs.Name())
@@ -92,6 +95,7 @@ func (c *MoveCommand) Execute() error {
 		if err := dev.WriteServo(c.num-1, value); err != nil {
 			log.Fatalf("write servo: %w", err)
 		}
+		time.Sleep(time.Duration(c.delayMillis) * time.Millisecond)
 	}
 
 	return nil
