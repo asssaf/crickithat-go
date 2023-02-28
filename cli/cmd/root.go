@@ -19,6 +19,7 @@ func NewRootCommand(usagePrefix string) *RootCommand {
 			flag.NewFlagSet(usagePrefix, flag.ExitOnError),
 			[]Command{
 				NewResetCommand(),
+				NewNeopixelCommand(),
 				servo.NewServoCommand(usagePrefix),
 			},
 			"",

@@ -84,7 +84,6 @@ func (d *Dev) SetWidth(i int, value uint16) error {
 
 	err := d.writeRegister(SEESAW_TIMER_BASE, SEESAW_TIMER_PWM, data)
 	return err
-
 }
 
 func scaleFloat64(x, in_min, in_max, out_min, out_max float64) float64 {
