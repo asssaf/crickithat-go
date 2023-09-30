@@ -1,9 +1,11 @@
 package servo
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"time"
 
@@ -33,9 +35,10 @@ func NewMoveCommand(usagePrefix string) *MoveCommand {
 	c.fs.IntVar(&c.delayMillis, "delay", 100, "Delay between positions, in milliseconds")
 
 	c.fs.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s %s <value> [<value> ... ]\n", usagePrefix, c.fs.Name())
+		fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s %s [<value> ... ]\n", usagePrefix, c.fs.Name())
 		fmt.Fprintf(flag.CommandLine.Output(), "Each <value> is in the range (0.0-1.0) as a factor of the pulse range.\n")
 		fmt.Fprintf(flag.CommandLine.Output(), "One or more <value>s can be provided and will be positioned in order.\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "If no values are provided on the commandline they will be read from standard input.\n")
 		c.fs.PrintDefaults()
 	}
 
@@ -66,7 +69,7 @@ func (c *MoveCommand) Init(args []string) error {
 	}
 
 	if c.fs.NArg() == 0 {
-		return fmt.Errorf("Missing position value")
+		log.Printf("Missing position value - will read vaules from stdin")
 	}
 
 	for _, arg := range c.fs.Args() {
@@ -104,11 +107,35 @@ func (c *MoveCommand) Execute() error {
 	}
 
 	for _, value := range c.values {
-		if err := dev.WriteServo(c.num-1, value, c.minPulseMicros, c.maxPulseMicros); err != nil {
+		if err := c.writeSingleValue(dev, value); err != nil {
 			log.Fatalf("write servo: %w", err)
 		}
-		time.Sleep(time.Duration(c.delayMillis) * time.Millisecond)
 	}
 
+	if len(c.values) == 0 {
+		// read values from stdin
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			str := scanner.Text()
+			value, err := strconv.ParseFloat(str, 64)
+			if err != nil || value < 0.0 || value > 1.0 {
+				log.Printf("servo value must be in the range 0.0-1.0: %s", str)
+				continue
+			}
+
+			if err := c.writeSingleValue(dev, value); err != nil {
+				log.Fatalf("write servo: %w", err)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (c *MoveCommand) writeSingleValue(dev *crickithat.Dev, value float64) error {
+	if err := dev.WriteServo(c.num-1, value, c.minPulseMicros, c.maxPulseMicros); err != nil {
+		return err
+	}
+	time.Sleep(time.Duration(c.delayMillis) * time.Millisecond)
 	return nil
 }
